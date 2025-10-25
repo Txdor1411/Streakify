@@ -16,7 +16,7 @@ export default function TabsLayout() {
             backgroundColor: "#1b263b", 
             paddingVertical: 10, 
             paddingHorizontal: 10,
-            paddingBottom: 1,
+            paddingBottom: 9,
             paddingTop: 6,
             height: 55,
             borderRadius: 30,           
@@ -24,7 +24,7 @@ export default function TabsLayout() {
             position: 'absolute',
             left: 0,
             right: 0,
-            bottom: 30,                // Increased for Samsung devices
+            bottom: 30,                
             borderTopWidth: 0,         
             elevation: 5,               
             shadowColor: '#000000ff',        
