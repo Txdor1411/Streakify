@@ -1,9 +1,8 @@
-import { Stack } from "expo-router";
-
+import { Stack, Tabs } from "expo-router";
 
 export default function TabsLayout() {
   return(
-    <Stack>
+    <Tabs>
       <Stack.Screen 
         name="index" 
         options={{ title: "Home" }} 
@@ -12,6 +11,6 @@ export default function TabsLayout() {
         name="login" 
         options={{ title: "Login" }} 
       />
-    </Stack>
+    </Tabs>
   )
 }
