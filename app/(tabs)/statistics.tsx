@@ -1,14 +1,16 @@
 import { StyleSheet, Text, View } from "react-native";
 
-export default function LoginScreen() {
+export default function Statistics() {
   return (
-    <View style={styles.Login}>
-    <Text style={{ color: "#0d1b2a", fontSize: 25, fontWeight: "bold" }}>Login Screen</Text>
+    <View style={styles.Statistics}>
+      <Text style={{ color: "#0d1b2a", fontSize: 25, fontWeight: "bold" }}>
+        Statistics screen
+      </Text>
     </View>
   );
 }
 const styles= StyleSheet.create({
-  Login:{
+  Statistics:{
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
