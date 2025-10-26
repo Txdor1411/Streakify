@@ -41,23 +41,49 @@ export default function TabsLayout() {
         }}>
       <Tabs.Screen 
         name="index" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size }) => <AntDesign name="home" size={size} color={color} /> }}
+        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) => 
+        {
+          return focused ?  <AntDesign name="home" size={size + 5} color={color} /> 
+          :
+          <AntDesign name="home" size={size} color={color}/>
+        }}}
+  
       />
       <Tabs.Screen 
         name="add_habit" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size }) => <AntDesign name="plus" size={size} color={color} /> }}
+        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) =>
+        { 
+          return focused ?  <AntDesign name="plus" size={size+5} color={color} />
+          :
+          <AntDesign name="plus" size={size} color={color} />
+        }}}
+
       />
       <Tabs.Screen 
         name="social" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size }) => <AntDesign name="team" size={size} color={color}  /> }}
+        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) => 
+        {  return focused ?  <AntDesign name="team" size={size+5} color={color}  />
+          :
+          <AntDesign name="team" size={size} color={color}  />
+        }}}
       />
       <Tabs.Screen 
         name="statistics" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size }) => <AntDesign name="line-chart" size={size} color={color} /> }}
+        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) => 
+        {
+          return focused ?  <AntDesign name="line-chart" size={size+5} color={color} />
+          :
+          <AntDesign name="line-chart" size={size} color={color} />
+        }}}
       />
       <Tabs.Screen 
         name="settings" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size }) => <Ionicons name="settings-outline" size={size} color={color} /> }}
+        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) =>
+        {
+          return focused ?  <Ionicons name="settings-outline" size={size+5} color={color} />
+          :
+          <Ionicons name="settings-outline" size={size} color={color} />
+        }}}
       />
     </Tabs>
       </View>
