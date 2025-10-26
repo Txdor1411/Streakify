@@ -1,27 +1,13 @@
 import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { Tabs, useRouter } from "expo-router";
-import { useEffect } from "react";
+import { Tabs } from "expo-router";
 
-function RouteGuard({children}: {children: React.ReactNode}) {
-
-  const router = useRouter();
-  const isAuth = false;
-
-  useEffect(()=>{
-    if(!isAuth){
-      router.replace("/auth");
-    }
-  });
-
-  return <>{children}</>
-}
 
 
 
 
 export default function TabsLayout() {
   return(
-    <RouteGuard>
+
     <Tabs screenOptions={{tabBarActiveTintColor: "coral"}}>
       <Tabs.Screen 
         name="index" 
@@ -37,6 +23,5 @@ export default function TabsLayout() {
         options={{ title: "Login" }} 
       />
     </Tabs>
-    </RouteGuard>
   )
 }
