@@ -24,7 +24,6 @@ export default function Index() {
     setCompletedHabits(prev => prev.includes(id) ? prev : [...prev, id]);
   };
 
-  // undo (onLongPress)
   const undoDone = (id: string) => {
     setCompletedHabits(prev => prev.filter(habitId => habitId !== id));
   };
