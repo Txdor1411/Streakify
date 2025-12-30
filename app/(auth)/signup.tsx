@@ -1,84 +1,66 @@
-import { useRouter } from "expo-router";
 import React, { useState } from "react";
-import { Image, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
-import { signUp } from "../authService";
+import { View, Text, TextInput, Button, Alert, StyleSheet } from "react-native";
+import { signup } from "@/authService";
 
-export default function SignUpScreen() {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
-  const [confirmPassword, setConfirmPassword] = useState<string>("");
-  const router = useRouter();
+export default function SignupScreen() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
 
-  const handleSignUp = async () => {
-    if (password !== confirmPassword) {
-      alert("Passwords do not match!");
+  const handleSignup = async () => {
+    if (!email || !password || !confirm) {
+      Alert.alert("Error", "All fields required");
+      return;
+    }
+
+    if (password !== confirm) {
+      Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    if (password.length < 6) {
+      Alert.alert("Error", "Password must be at least 6 characters");
       return;
     }
 
     try {
-      await signUp(email, password);
-      router.replace("/Home");
-    } catch (error: any) {
-      alert(error.message);
+      const user = await signup(email, password);
+      Alert.alert("Success", `Account created for ${user.email}`);
+    } catch (err: any) {
+      Alert.alert("Signup failed", err.message);
     }
   };
 
   return (
     <View style={styles.container}>
-      {/* Logo */}
-      <View style={styles.logoContainer}>
-          <Image
-            source={require("@/assets/images/logo.png")}
-            style={styles.logo}
-          />
-        </View>
-        <Text style={styles.title}>Create Your{"\n"}Breezify Account</Text>
+      <Text style={styles.title}>Sign Up</Text>
 
-      {/* Form */}
-      <View style={styles.formCard}>
-        <TextInput
-          placeholder="Full Name"
-          placeholderTextColor="#999"
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Email Address"
-          value={email}
-          onChangeText={setEmail}
-          placeholderTextColor="#999"
-          autoCapitalize="none"
-          keyboardType="email-address"
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Password"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-          placeholderTextColor="#999"
-          style={styles.input}
-        />
-        <TextInput
-          placeholder="Confirm Password"
-          value={confirmPassword}
-          onChangeText={setConfirmPassword}
-          secureTextEntry
-          placeholderTextColor="#999"
-          style={styles.input}
-        />
+      <TextInput
+        placeholder="Email"
+        autoCapitalize="none"
+        keyboardType="email-address"
+        value={email}
+        onChangeText={setEmail}
+        style={styles.input}
+      />
 
-        <TouchableOpacity style={styles.signUpButton} onPress={handleSignUp}>
-          <Text style={styles.signUpText}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
+      <TextInput
+        placeholder="Password"
+        secureTextEntry
+        value={password}
+        onChangeText={setPassword}
+        style={styles.input}
+      />
 
-      {/* Log In */}
-      <Text style={styles.loginText}>
-        Already have an account?{" "}
-        <Text style={styles.loginLink} onPress={() => router.push("../login")}>
-          Log In
-        </Text>
-      </Text>
+      <TextInput
+        placeholder="Confirm password"
+        secureTextEntry
+        value={confirm}
+        onChangeText={setConfirm}
+        style={styles.input}
+      />
+
+      <Button title="Create account" onPress={handleSignup} />
     </View>
   );
 }
@@ -86,70 +68,20 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#E8F0E4",
-    alignItems: "center",
-    justifyContent: "flex-start", 
-    paddingTop: 30,              
-    paddingHorizontal: 20,
-  },
-  logoContainer: {
-    alignItems: "center",
-    marginBottom: 10,
-  },
-  logo: {
-    width: 140,
-    height: 140,
-    resizeMode: "contain",
+    justifyContent: "center",
+    padding: 24,
   },
   title: {
-    fontSize: 29,
+    fontSize: 28,
     fontWeight: "700",
-    color: "#2C3A2D",
+    marginBottom: 24,
     textAlign: "center",
-    fontFamily: "System",
-    marginBottom: 20,
-  },
-  formCard: {
-    width: "100%",
-    backgroundColor: "#FFFFFF",
-    borderRadius: 12,
-    padding: 20,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
-    marginBottom: 20,
   },
   input: {
     borderWidth: 1,
-    borderColor: "#D0D0D0",
+    borderColor: "#ccc",
     borderRadius: 10,
     padding: 12,
-    marginBottom: 15,
-    fontSize: 16,
-    color: "#333",
-  },
-  signUpButton: {
-    backgroundColor: "#2C7A59",
-    borderRadius: 10,
-    paddingVertical: 14,
-    alignItems: "center",
-  },
-  signUpText: {
-    color: "#FFFFFF",
-    fontWeight: "600",
-    fontSize: 16,
-  },
-  loginText: {
-    fontSize: 16,
-    color: "#333",
-    textAlign: "center",
-    width: "100%",
-    flexWrap: "nowrap",
-  },
-  loginLink: {
-    color: "#2C7A59",
-    fontWeight: "600",
-    textDecorationLine: "underline",
+    marginBottom: 12,
   },
 });
