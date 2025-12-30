@@ -1,10 +1,10 @@
-import { Redirect, Tabs } from "expo-router";
+import { Redirect } from "expo-router";
 import { onAuthStateChanged } from "firebase/auth";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
-import { auth } from "../../lib/firebaseConfig";
+import { auth } from "../lib/firebaseConfig";
 
-export default function TabsLayout() {
+export default function Index() {
   const [loading, setLoading] = useState(true);
   const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
 
@@ -24,7 +24,5 @@ export default function TabsLayout() {
     );
   }
 
-  if (!loggedIn) return <Redirect href="/login" />;
-
-  return <Tabs screenOptions={{ headerShown: false }} />;
+  return loggedIn ? <Redirect href="/(tabs)" /> : <Redirect href="/login" />;
 }
