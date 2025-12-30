@@ -1,92 +1,145 @@
-import AntDesign from '@expo/vector-icons/AntDesign';
-import Ionicons from '@expo/vector-icons/Ionicons';
+import AntDesign from "@expo/vector-icons/AntDesign";
+import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { Tabs } from "expo-router";
-import { View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Redirect, Tabs } from "expo-router";
+import { onAuthStateChanged } from "firebase/auth";
+import { useEffect, useState } from "react";
+import { ActivityIndicator, View } from "react-native";
+import { SafeAreaProvider } from "react-native-safe-area-context";
+import { auth } from "../../lib/firebaseConfig";
 
 export default function TabsLayout() {
-  return(
+  const [loading, setLoading] = useState(true);
+  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, (user) => {
+      setLoggedIn(!!user);
+      setLoading(false);
+    });
+    return unsub;
+  }, []);
+
+  // ⏳ Așteptăm Firebase
+  if (loading) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <ActivityIndicator />
+      </View>
+    );
+  }
+
+  // 🔒 NELOGAT → LOGIN
+  if (!loggedIn) {
+    return <Redirect href="/(auth)/login" />;
+  }
+
+  // ✅ LOGAT → TAB-urile tale
+  return (
     <SafeAreaProvider>
       <View style={{ flex: 1 }}>
-        <Tabs screenOptions=
-        {{ 
-          tabBarShowLabel: false,
-          tabBarStyle: { 
-            backgroundColor: "#1b263b", 
-            paddingVertical: 10, 
-            paddingHorizontal: 10,
-            paddingBottom: 9,
-            paddingTop: 6,
-            height: 55,
-            borderRadius: 30,           
-            marginHorizontal: 60,       
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 30,                
-            borderTopWidth: 0,         
-            elevation: 5,               
-            shadowColor: '#000000ff',        
-            shadowOffset: {
-              width: 2,
-              height: 2,
+        <Tabs
+          screenOptions={{
+            tabBarShowLabel: false,
+            tabBarStyle: {
+              backgroundColor: "#1b263b",
+              paddingVertical: 10,
+              paddingHorizontal: 10,
+              paddingBottom: 9,
+              paddingTop: 6,
+              height: 55,
+              borderRadius: 30,
+              marginHorizontal: 60,
+              position: "absolute",
+              left: 0,
+              right: 0,
+              bottom: 30,
+              borderTopWidth: 0,
+              elevation: 5,
+              shadowColor: "#000000ff",
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.25,
+              shadowRadius: 3.84,
+              zIndex: 0,
             },
-            shadowOpacity: 0.25,
-            shadowRadius: 3.84,
-            zIndex: 0,
-          }, 
-          tabBarActiveTintColor: "#e0e1dd", 
-          tabBarInactiveTintColor: "#415a77"
-        }}>
-      <Tabs.Screen 
-        name="index" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) => 
-        {
-          return focused ?  <AntDesign name="home" size={size + 5} color={color} /> 
-          :
-          <AntDesign name="home" size={size} color={color}/>
-        }}}
-  
-      />
-      <Tabs.Screen 
-        name="add_habit" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) =>
-        { 
-          return focused ?  <AntDesign name="plus" size={size+5} color={color} />
-          :
-          <AntDesign name="plus" size={size} color={color} />
-        }}}
+            tabBarActiveTintColor: "#e0e1dd",
+            tabBarInactiveTintColor: "#415a77",
+          }}
+        >
+          <Tabs.Screen
+            name="index"
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size, focused }) =>
+                focused ? (
+                  <AntDesign name="home" size={size + 5} color={color} />
+                ) : (
+                  <AntDesign name="home" size={size} color={color} />
+                ),
+            }}
+          />
 
-      />
-      <Tabs.Screen 
-        name="social" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) => 
-        {  return focused ?  <AntDesign name="team" size={size+5} color={color}  />
-          :
-          <AntDesign name="team" size={size} color={color}  />
-        }}}
-      />
-      <Tabs.Screen 
-        name="statistics" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) => 
-        {
-          return focused ?  <AntDesign name="line-chart" size={size+5} color={color} />
-          :
-          <AntDesign name="line-chart" size={size} color={color} />
-        }}}
-      />
-      <Tabs.Screen 
-        name="settings" 
-        options={{  headerShown: false, tabBarIcon: ({ color, size, focused }) =>
-        {
-          return focused ?  <Ionicons name="settings-outline" size={size+5} color={color} />
-          :
-          <Ionicons name="settings-outline" size={size} color={color} />
-        }}}
-      />
-    </Tabs>
+          <Tabs.Screen
+            name="add_habit"
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size, focused }) =>
+                focused ? (
+                  <AntDesign name="plus" size={size + 5} color={color} />
+                ) : (
+                  <AntDesign name="plus" size={size} color={color} />
+                ),
+            }}
+          />
+
+          <Tabs.Screen
+            name="social"
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size, focused }) =>
+                focused ? (
+                  <AntDesign name="team" size={size + 5} color={color} />
+                ) : (
+                  <AntDesign name="team" size={size} color={color} />
+                ),
+            }}
+          />
+
+          <Tabs.Screen
+            name="statistics"
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size, focused }) =>
+                focused ? (
+                  <AntDesign name="line-chart" size={size + 5} color={color} />
+                ) : (
+                  <AntDesign name="line-chart" size={size} color={color} />
+                ),
+            }}
+          />
+
+          <Tabs.Screen
+            name="settings"
+            options={{
+              headerShown: false,
+              tabBarIcon: ({ color, size, focused }) =>
+                focused ? (
+                  <Ionicons
+                    name="settings-outline"
+                    size={size + 5}
+                    color={color}
+                  />
+                ) : (
+                  <Ionicons
+                    name="settings-outline"
+                    size={size}
+                    color={color}
+                  />
+                ),
+            }}
+          />
+        </Tabs>
       </View>
     </SafeAreaProvider>
-  )
+  );
 }
