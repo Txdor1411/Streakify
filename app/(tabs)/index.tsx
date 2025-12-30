@@ -3,6 +3,9 @@ import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   const [completedHabits, setCompletedHabits] = useState<string[]>([]);
+  const [todoExpanded, setTodoExpanded] = useState(false);
+  const [doneExpanded, setDoneExpanded] = useState(false);
+  const VISIBLE_COUNT = 3; // adjust how many items are shown initially
   const habits = [
     { id: "1", title: "Drink water" },
     { id: "2", title: "Exercise" },
@@ -13,71 +16,81 @@ export default function Index() {
     { id: "7", title: "Learn something new" },
     { id: "8", title: "Eat healthy" },
     { id: "9", title: "Limit screen time" },
-    { id: "10", title: "Connect with loved ones" },
-    { id: "11", title: "Plan your day" },
-    { id: "12", title: "Reflect on your goals" },
-    { id: "13", title: "Practice gratitude" },
-    { id: "14", title: "Take breaks" },
-    { id: "15", title: "Stay organized" },
-    { id: "16", title: "Avoid procrastination" },
-    { id: "17", title: "Stay positive" },
-    { id: "18", title: "Practice mindfulness" },
-    { id: "19", title: "Limit caffeine intake" },
-    { id: "20", title: "Get fresh air" },
-    { id: "21", title: "Stretch" },
-    { id: "22", title: "Practice deep breathing" },
-    { id: "23", title: "Set daily intentions" },
-    { id: "24", title: "Journal your thoughts" },
-    { id: "25", title: "Avoid negative self-talk" },
-    { id: "26", title: "Practice self-care" },
+    
     // lista obiceiurilor 
   ];
 
-  const toggleHabit = (id: string) => {
-    setCompletedHabits(prev => 
-      prev.includes(id) 
-        ? prev.filter(habitId => habitId !== id)
-        : [...prev, id]
-    );
+  const markDone = (id: string) => {
+    setCompletedHabits(prev => prev.includes(id) ? prev : [...prev, id]);
   };
 
-  return (
-  <ScrollView contentContainerStyle={styles.scrollContent}>
-    <View style={styles.container}>
-      <Text style={styles.header}>To do</Text>
+  // undo (onLongPress)
+  const undoDone = (id: string) => {
+    setCompletedHabits(prev => prev.filter(habitId => habitId !== id));
+  };
 
-      <View style={styles.habitsList}>
-        {habits.map((h) => (
-          <Pressable 
-  key={h.id} 
-  style={({pressed}) => [
-    styles.habitCard,
-    completedHabits.includes(h.id) && styles.completedHabitCard,
-    pressed && !completedHabits.includes(h.id) && { backgroundColor: "#415A77" }
-  ]} 
-  android_ripple={{ color: "#415A77" }}
-  onPress={() => toggleHabit(h.id)}
->
-  {({ pressed }) => (
-    <>
-      <View style={[
-        styles.checkContainer,
-        completedHabits.includes(h.id) && styles.checkedContainer,
-        pressed && !completedHabits.includes(h.id) && { backgroundColor: "#415A77", borderColor: "#415A77" }
-      ]} />
-      <Text style={[
-        styles.habitTitle,
-        completedHabits.includes(h.id) && styles.completedHabitTitle
-      ]}>
-        {h.title}
-      </Text>
-    </>
-  )}
-</Pressable>
-        ))}
+  const todo = habits.filter(h => !completedHabits.includes(h.id));
+  const done = habits.filter(h => completedHabits.includes(h.id));
+
+  return (
+    <ScrollView contentContainerStyle={styles.scrollContent}>
+      <View style={styles.container}>
+
+        <Text style={styles.header}>To do</Text>
+        <View style={styles.habitsList}>
+          { (todoExpanded ? todo : todo.slice(0, VISIBLE_COUNT)).map((h) => (
+            <Pressable
+              key={h.id}
+              style={({ pressed }) => [
+                styles.habitCard,
+                pressed && { backgroundColor: "#335165" } // darker on press for todo items
+              ]}
+              android_ripple={{ color: "#335165" }}
+              onPress={() => markDone(h.id)}
+            >
+              {({ pressed }) => (
+                <>
+                  <View style={[
+                    styles.checkContainer,
+                    pressed && { backgroundColor: "#335165", borderColor: "#335165" }
+                  ]} />
+                  <Text style={styles.habitTitle}>{h.title}</Text>
+                </>
+              )}
+            </Pressable>
+          ))}
+          {todo.length > VISIBLE_COUNT && (
+            <Pressable style={styles.seeMoreButton} onPress={() => setTodoExpanded(prev => !prev)}>
+              <Text style={styles.seeMoreText}>{todoExpanded ? "Show less" : `See more (${todo.length - VISIBLE_COUNT})`}</Text>
+            </Pressable>
+          )}
+        </View>
+
+        <Text style={[styles.header, { marginTop: 24 }]}>Done</Text>
+        <View style={styles.habitsList}>
+          { (doneExpanded ? done : done.slice(0, VISIBLE_COUNT)).map((h) => (
+            <Pressable
+              key={h.id}
+              style={() => [
+                styles.habitCard,
+                styles.completedHabitCard
+              ]}
+              onPress={() => undoDone(h.id)}          // tap to undo
+              onLongPress={() => undoDone(h.id)}      // or long press to undo
+            >
+              <View style={[styles.checkContainer, styles.checkedContainer]} />
+              <Text style={styles.completedHabitTitle}>{h.title}</Text>
+            </Pressable>
+          ))}
+          {done.length > VISIBLE_COUNT && (
+            <Pressable style={styles.seeMoreButton} onPress={() => setDoneExpanded(prev => !prev)}>
+              <Text style={styles.seeMoreText}>{doneExpanded ? "Show less" : `See more (${done.length - VISIBLE_COUNT})`}</Text>
+            </Pressable>
+          )}
+        </View>
+
       </View>
-    </View>
-  </ScrollView>
+    </ScrollView>
   );
 }
 
@@ -91,19 +104,21 @@ const styles = StyleSheet.create({
     color: "#0d1b2a",
     fontSize: 25,
     fontWeight: "bold",
-    marginBottom: 12,
+    marginBottom: 8,
+    marginTop: 120,
   },
   habitsList: {
-    marginTop: 16,
+    marginTop: 15,
+    marginBottom: 5,
   },
   habitCard: {
     flexDirection: "row",
     alignItems: "center",
     backgroundColor: "#415A77",
-    paddingVertical: 14,
-    paddingHorizontal: 16,
-    borderRadius: 10,
-    marginBottom: 12,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    borderRadius: 18,
+    marginBottom: 17,
     shadowColor: "#000",
     shadowOpacity: 0.05,
     shadowRadius: 6,
@@ -146,12 +161,29 @@ const styles = StyleSheet.create({
     borderColor: "#0d1b2a",
     marginRight: 12,
   },
+  
   checkedContainer: {
     backgroundColor: "#415A77",
     borderColor: "#415A77",
   },
+  seeMoreButton: {
+    alignSelf: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    marginTop: 6,
+    marginBottom: 6,
+    backgroundColor: "transparent",
+  },
+  seeMoreText: {
+    color: "#0d3b4a",
+    fontSize: 14,
+    fontWeight: "600",
+  },
   scrollContent: {
     backgroundColor: "#e0e1dd",
     justifyContent: "center",
+    flexGrow: 1,         // ensure content fills ScrollView so paddingBottom is respected
+    paddingBottom: 10,  // space for bottom nav — adjust value to match your navbar height
   }
 });
