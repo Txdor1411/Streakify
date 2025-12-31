@@ -1,24 +1,37 @@
-import { useState } from "react";
-import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useIsFocused } from "@react-navigation/native";
+import React, { useCallback, useEffect, useState } from "react";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 export default function Index() {
   const [completedHabits, setCompletedHabits] = useState<string[]>([]);
   const [todoExpanded, setTodoExpanded] = useState(false);
   const [doneExpanded, setDoneExpanded] = useState(false);
-  const VISIBLE_COUNT = 3; // adjust how many items are shown initially
-  const habits = [
-    { id: "1", title: "Drink water" },
-    { id: "2", title: "Exercise" },
-    { id: "3", title: "Read a book"},
-    { id: "4", title: "Meditate" },
-    { id: "5", title: "Sleep early" },
-    { id: "6", title: "Practice a hobby" },
-    { id: "7", title: "Learn something new" },
-    { id: "8", title: "Eat healthy" },
-    { id: "9", title: "Limit screen time" },
-    
-    // lista obiceiurilor 
+  const VISIBLE_COUNT = 3;
+  const stories = [
+    { id: "s1", name: "You", unseen: true },
+    { id: "s2", name: "Anna", unseen: true },
+    { id: "s3", name: "Mark", unseen: false },
+    { id: "s4", name: "Lena", unseen: true },
+    { id: "s5", name: "Kai Cenat", unseen: false },
   ];
+  const [habits, setHabits] = useState<any[]>([]);
+  const isFocused = useIsFocused();
+  const [expandedHabitId, setExpandedHabitId] = useState<string | null>(null);
+
+  const loadHabits = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem("@habits");
+      const list = raw ? JSON.parse(raw) : [];
+      setHabits(list);
+    } catch (e) {
+      console.error("Failed loading habits", e);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (isFocused) loadHabits();
+  }, [isFocused, loadHabits]);
 
   const markDone = (id: string) => {
     setCompletedHabits(prev => prev.includes(id) ? prev : [...prev, id]);
@@ -28,12 +41,57 @@ export default function Index() {
     setCompletedHabits(prev => prev.filter(habitId => habitId !== id));
   };
 
+  const deleteHabit = (id: string) => {
+    Alert.alert("Delete habit", "Are you sure you want to delete this habit?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: async () => {
+          try {
+            const raw = await AsyncStorage.getItem("@habits");
+            const list = raw ? JSON.parse(raw) : [];
+            const updated = list.filter((x: any) => x.id !== id);
+            await AsyncStorage.setItem("@habits", JSON.stringify(updated));
+            setHabits(updated);
+            setCompletedHabits(prev => prev.filter(hid => hid !== id));
+            if (expandedHabitId === id) setExpandedHabitId(null);
+          } catch (e) {
+            console.error("Failed deleting habit", e);
+            Alert.alert("Error", "Failed to delete habit.");
+          }
+        }
+      }
+    ]);
+  };
+
   const todo = habits.filter(h => !completedHabits.includes(h.id));
   const done = habits.filter(h => completedHabits.includes(h.id));
 
   return (
     <ScrollView contentContainerStyle={styles.scrollContent}>
       <View style={styles.container}>
+
+        {}
+        <View style={styles.storiesWrapper}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.storiesScroll}
+          >
+            {stories.map((s) => (
+              <View key={s.id} style={styles.storyItem}>
+                <View
+                  style={[
+                    styles.storyCircle,
+                    s.unseen && styles.storyOutline,
+                  ]}
+                />
+                <Text style={styles.storyLabel}>{s.name}</Text>
+              </View>
+            ))}
+          </ScrollView>
+        </View>
 
         <Text style={styles.header}>To do</Text>
         <View style={styles.habitsList}>
@@ -42,18 +100,33 @@ export default function Index() {
               key={h.id}
               style={({ pressed }) => [
                 styles.habitCard,
-                pressed && { backgroundColor: "#335165" } // darker on press for todo items
+                expandedHabitId === h.id && styles.habitCardExpanded,
+                { backgroundColor: h.color ?? "#415A77" },
+                pressed && { opacity: 0.85 }
               ]}
               android_ripple={{ color: "#335165" }}
               onPress={() => markDone(h.id)}
+              onLongPress={() => setExpandedHabitId(prev => prev === h.id ? null : h.id)}
             >
               {({ pressed }) => (
                 <>
                   <View style={[
                     styles.checkContainer,
-                    pressed && { backgroundColor: "#335165", borderColor: "#335165" }
-                  ]} />
-                  <Text style={styles.habitTitle}>{h.title}</Text>
+                    pressed && { borderColor: "transparent" }
+                  ]}>
+                    <Text style={{ fontSize: 18 }}>{h.icon ?? ""}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <Text style={styles.habitTitle}>{h.title ?? h.name ?? "Habit"}</Text>
+                    {expandedHabitId === h.id && (
+                      <View style={{ marginTop: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                        <Text style={styles.habitDescription}>{h.description ?? "No description"}</Text>
+                        <Pressable onPress={() => deleteHabit(h.id)} style={styles.deleteButton}>
+                          <Text style={styles.deleteText}>Delete</Text>
+                        </Pressable>
+                      </View>
+                    )}
+                  </View>
                 </>
               )}
             </Pressable>
@@ -72,13 +145,27 @@ export default function Index() {
               key={h.id}
               style={() => [
                 styles.habitCard,
-                styles.completedHabitCard
+                styles.completedHabitCard,
+                expandedHabitId === h.id && styles.habitCardExpanded,
+                { backgroundColor: h.color ?? "#415A77" }
               ]}
-              onPress={() => undoDone(h.id)}          // tap to undo
-              onLongPress={() => undoDone(h.id)}      // or long press to undo
+              onPress={() => undoDone(h.id)}          
+              onLongPress={() => setExpandedHabitId(prev => prev === h.id ? null : h.id)}     
             >
-              <View style={[styles.checkContainer, styles.checkedContainer]} />
-              <Text style={styles.completedHabitTitle}>{h.title}</Text>
+              <View style={[styles.checkContainer, styles.checkedContainer]}>
+                <Text style={{ fontSize: 18 }}>{h.icon ?? ""}</Text>
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.completedHabitTitle}>{h.title ?? h.name ?? "Habit"}</Text>
+                {expandedHabitId === h.id && (
+                  <View style={{ marginTop: 8, flexDirection: "row", justifyContent: "space-between", alignItems: "center" }}>
+                    <Text style={styles.habitDescription}>{h.description ?? "No description"}</Text>
+                    <Pressable onPress={() => deleteHabit(h.id)} style={styles.deleteButton}>
+                      <Text style={styles.deleteText}>Delete</Text>
+                    </Pressable>
+                  </View>
+                )}
+              </View>
             </Pressable>
           ))}
           {done.length > VISIBLE_COUNT && (
@@ -98,13 +185,43 @@ const styles = StyleSheet.create({
     flex: 1,
     padding: 16,
     backgroundColor: "#e0e1dd",
+    marginTop: 18,
   },
   header: {
     color: "#0d1b2a",
     fontSize: 25,
     fontWeight: "bold",
     marginBottom: 8,
-    marginTop: 120,
+    marginTop: 8,
+  },
+  storiesWrapper: {
+    marginTop: 16,
+    marginBottom: 8,
+  },
+  storiesScroll: {
+    paddingHorizontal: 4,
+    alignItems: "center",
+  },
+  storyItem: {
+    width: 72,
+    alignItems: "center",
+    marginRight: 12,
+  },
+  storyCircle: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
+    backgroundColor: "#cfd8dc",
+    borderWidth: 2,
+    borderColor: "transparent",
+  },
+  storyOutline: {
+    borderColor: "#bfff00", 
+  },
+  storyLabel: {
+    marginTop: 6,
+    fontSize: 12,
+    color: "#0d1b2a",
   },
   habitsList: {
     marginTop: 15,
@@ -165,6 +282,27 @@ const styles = StyleSheet.create({
     backgroundColor: "#415A77",
     borderColor: "#415A77",
   },
+  habitCardExpanded: {
+    paddingVertical: 22,
+    alignItems: "flex-start",
+  },
+  habitDescription: {
+    marginTop: 8,
+    color: "#0d1b2a",
+    fontSize: 14,
+    opacity: 0.95,
+  },
+  deleteButton: {
+    marginLeft: 12,
+    paddingVertical: 6,
+    paddingHorizontal: 10,
+    borderRadius: 8,
+    backgroundColor: "#ff6b6b",
+  },
+  deleteText: {
+    color: "#fff",
+    fontWeight: "700",
+  },
   seeMoreButton: {
     alignSelf: "flex-start",
     paddingVertical: 6,
@@ -183,6 +321,6 @@ const styles = StyleSheet.create({
     backgroundColor: "#e0e1dd",
     justifyContent: "center",
     flexGrow: 1,         // ensure content fills ScrollView so paddingBottom is respected
-    paddingBottom: 10,  // space for bottom nav — adjust value to match your navbar height
+    paddingBottom: 92,  // space for bottom nav — increased to avoid overlap with navbar
   }
 });
