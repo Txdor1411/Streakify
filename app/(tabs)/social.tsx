@@ -1,11 +1,15 @@
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../ThemeProvider";
 
 export default function Social() {
+    const { dark } = useTheme();
+    const bg = dark ? "#05060a" : "#e0e1dd";
+    const textColor = dark ? "#e0e1dd" : "#0d1b2a";
+
     return (
-        
-            <ScrollView contentContainerStyle={styles.scrollContent}>
-                <View style={styles.Social}>
-                <Text style={{ color: "#0d1b2a", fontSize: 25, fontWeight: "bold"}}>
+        <ScrollView contentContainerStyle={[styles.scrollContent, { backgroundColor: bg }]}>
+            <View style={[styles.Social, { backgroundColor: bg }] }>
+                <Text style={{ color: textColor, fontSize: 25, fontWeight: "bold" }}>
                     Social screen
                     In today’s world, social media has become one of the most powerful tools of communication, information, and entertainment. Platforms such as Instagram, TikTok, Snapchat, Facebook, and X (formerly Twitter) have changed the way people interact, share ideas, and even perceive the world around them. While social media brings many advantages, it also comes with certain risks and challenges that affect individuals and society as a whole.
 
@@ -19,19 +23,16 @@ In addition, social media has a strong influence on politics and public opinion.
 
 In conclusion, social media is a double-edged sword. It can be an incredible tool for communication, learning, and creativity, but it can also be harmful if used irresponsibly. The key is balance — using social media to connect and grow, without letting it control our lives. As society continues to evolve in the digital age, understanding and managing the impact of social media is one of the greatest challenges of our time.
                 </Text>
-                </View>
-            </ScrollView>
-        
+            </View>
+        </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
     Social: {
         flex: 1,
-        backgroundColor: "#e0e1dd",
     },
     scrollContent: {
-        backgroundColor: "#e0e1dd",
         justifyContent: "center",
         alignItems: "center",
         padding: 30,

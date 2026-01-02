@@ -11,6 +11,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { useTheme } from "../ThemeProvider";
 
 const ICONS = [
   { id: "🏃", name: "Run" },
@@ -22,6 +23,11 @@ const ICONS = [
 const COLORS = ["#FF6B6B", "#F7B267", "#6BCB77", "#4D96FF", "#B197FC"];
 
 export default function AddHabit() {
+  const { dark } = useTheme();
+  const bg = dark ? "#05060a" : "#f7f7f8";
+  const textColor = dark ? "#e0e1dd" : "#0d1b2a";
+  const inputBg = dark ? "#0b0b0c" : "#fff";
+  const borderColor = dark ? "#1f2937" : "#e6e6e6";
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [selectedIcon, setSelectedIcon] = useState(ICONS[0].id);
@@ -63,27 +69,29 @@ export default function AddHabit() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.title}>Add a Habit</Text>
+    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bg }] }>
+      <Text style={[styles.title, { color: textColor }]}>Add a Habit</Text>
 
-      <Text style={styles.label}>Name</Text>
+      <Text style={[styles.label, { color: textColor }]}>Name</Text>
       <TextInput
         value={name}
         onChangeText={setName}
         placeholder="e.g., Morning Run"
-        style={styles.input}
+        placeholderTextColor={dark ? "#9ca3af" : "#9aa0a6"}
+        style={[styles.input, { backgroundColor: inputBg, borderColor, color: textColor }]}
       />
 
-      <Text style={styles.label}>Description</Text>
+      <Text style={[styles.label, { color: textColor }]}>Description</Text>
       <TextInput
         value={description}
         onChangeText={setDescription}
         placeholder="Optional description"
-        style={[styles.input, { height: 100 }]}
+        placeholderTextColor={dark ? "#9ca3af" : "#9aa0a6"}
+        style={[styles.input, { height: 100, backgroundColor: inputBg, borderColor, color: textColor }]}
         multiline
       />
 
-      <Text style={styles.label}>Icon</Text>
+      <Text style={[styles.label, { color: textColor }]}>Icon</Text>
       <View style={styles.row}> 
         <Pressable
           onPress={() => setIconDropdownOpen((s) => !s)}
@@ -93,7 +101,7 @@ export default function AddHabit() {
         </Pressable>
         <View style={{ flex: 1 }}>
           {iconDropdownOpen && (
-            <View style={styles.dropdown}>
+            <View style={[styles.dropdown, { backgroundColor: inputBg, borderColor }] }>
               {ICONS.map((ic) => (
                 <TouchableOpacity
                   key={ic.id}
@@ -104,7 +112,7 @@ export default function AddHabit() {
                   }}
                 >
                   <Text style={styles.iconEmoji}>{ic.id}</Text>
-                  <Text style={{ marginLeft: 8 }}>{ic.name}</Text>
+                  <Text style={{ marginLeft: 8, color: textColor }}>{ic.name}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -112,7 +120,7 @@ export default function AddHabit() {
         </View>
       </View>
 
-      <Text style={styles.label}>Color</Text>
+      <Text style={[styles.label, { color: textColor }]}>Color</Text>
       <View style={styles.colorRow}>
         {COLORS.map((c) => (
           <Pressable
@@ -124,7 +132,7 @@ export default function AddHabit() {
       </View>
 
       <View style={[styles.row, { marginTop: 20, alignItems: "center" }]}> 
-        <Text style={styles.label}>Notify</Text>
+        <Text style={[styles.label, { color: textColor}]}>Notify</Text>
         <Switch value={notify} onValueChange={setNotify} />
       </View>
 

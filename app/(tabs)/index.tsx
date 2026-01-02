@@ -1,9 +1,15 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useIsFocused } from "@react-navigation/native";
+import { LinearGradient } from "expo-linear-gradient";
 import React, { useCallback, useEffect, useState } from "react";
 import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useTheme } from "../ThemeProvider";
 
 export default function Index() {
+  const { dark } = useTheme();
+  const bg = dark ? "#05060a" : "#e0e1dd";
+  const textColor = dark ? "#e0e1dd" : "#0d1b2a";
+
   const [completedHabits, setCompletedHabits] = useState<string[]>([]);
   const [todoExpanded, setTodoExpanded] = useState(false);
   const [doneExpanded, setDoneExpanded] = useState(false);
@@ -69,8 +75,8 @@ export default function Index() {
   const done = habits.filter(h => completedHabits.includes(h.id));
 
   return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <View style={styles.container}>
+    <ScrollView contentContainerStyle={[styles.scrollContent, { backgroundColor: bg }]}>
+      <View style={[styles.container, { backgroundColor: bg }]}>
 
         {}
         <View style={styles.storiesWrapper}>
@@ -81,19 +87,29 @@ export default function Index() {
           >
             {stories.map((s) => (
               <View key={s.id} style={styles.storyItem}>
-                <View
-                  style={[
-                    styles.storyCircle,
-                    s.unseen && styles.storyOutline,
-                  ]}
-                />
-                <Text style={styles.storyLabel}>{s.name}</Text>
+                {s.unseen ? (
+                  dark ? (
+                    <LinearGradient
+                      colors={["#FFD700", "#FF00FF"]}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 1 }}
+                      style={styles.storyOutlineGradient}
+                    >
+                      <View style={[styles.storyCircleInner, { backgroundColor: bg }]} />
+                    </LinearGradient>
+                  ) : (
+                    <View style={[styles.storyCircle, styles.storyOutlineLight]} />
+                  )
+                ) : (
+                  <View style={styles.storyCircle} />
+                )}
+                <Text style={[styles.storyLabel, { color: textColor }]}>{s.name}</Text>
               </View>
             ))}
           </ScrollView>
         </View>
 
-        <Text style={styles.header}>To do</Text>
+        <Text style={[styles.header, { color: textColor }]}>To do</Text>
         <View style={styles.habitsList}>
           { (todoExpanded ? todo : todo.slice(0, VISIBLE_COUNT)).map((h) => (
             <Pressable
@@ -138,7 +154,7 @@ export default function Index() {
           )}
         </View>
 
-        <Text style={[styles.header, { marginTop: 24 }]}>Done</Text>
+        <Text style={[styles.header, { marginTop: 24, color: textColor }]}>Done</Text>
         <View style={styles.habitsList}>
           { (doneExpanded ? done : done.slice(0, VISIBLE_COUNT)).map((h) => (
             <Pressable
@@ -211,12 +227,24 @@ const styles = StyleSheet.create({
     width: 68,
     height: 68,
     borderRadius: 34,
-    backgroundColor: "#cfd8dc",
     borderWidth: 2,
     borderColor: "transparent",
   },
-  storyOutline: {
-    borderColor: "#bfff00", 
+  storyOutlineLight: {
+    borderWidth: 3,
+    borderColor: "#6BCB77",
+  },
+  storyOutlineGradient: {
+    width: 74,
+    height: 74,
+    borderRadius: 37,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  storyCircleInner: {
+    width: 68,
+    height: 68,
+    borderRadius: 34,
   },
   storyLabel: {
     marginTop: 6,
