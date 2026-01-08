@@ -1,48 +1,43 @@
 import AntDesign from "@expo/vector-icons/AntDesign";
 import Ionicons from "@expo/vector-icons/Ionicons";
 
-import { Redirect, Tabs } from "expo-router";
-import { onAuthStateChanged } from "firebase/auth";
-import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
-import { SafeAreaProvider } from "react-native-safe-area-context";
-import { auth } from "../../lib/firebaseConfig";
+import { Tabs } from "expo-router";
+import { View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useTheme } from "../ThemeProvider";
 
 export default function TabsLayout() {
-  const [loading, setLoading] = useState(true);
-  const [loggedIn, setLoggedIn] = useState<boolean | null>(null);
+  const { dark } = useTheme();
 
-  useEffect(() => {
-    const unsub = onAuthStateChanged(auth, (user) => {
-      setLoggedIn(!!user);
-      setLoading(false);
-    });
-    return unsub;
-  }, []);
 
-  // ⏳ Așteptăm Firebase
-  if (loading) {
-    return (
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-        <ActivityIndicator />
-      </View>
-    );
-  }
+  console.log("TabsLayout: dark =", dark);
 
-  // 🔒 NELOGAT → LOGIN
-  if (!loggedIn) {
-    return <Redirect href="/(auth)/login" />;
-  }
+  const tabBarBg = dark ? "#080c16ff" : "#1b263b";
+  const tabBarActive = dark ? "#e0e1dd" : "#e0e1dd";
+  const tabBarInactive = dark ? "#9ca3af" : "#415a77";
+  const outerBg = dark ? "#05060a" : "#e0e1dd";
 
-  // ✅ LOGAT → TAB-urile tale
   return (
     <SafeAreaProvider>
-      <View style={{ flex: 1 }}>
+      <View style={{ flex: 1, backgroundColor: outerBg }}>
+        <View
+          style={{
+            position: 'absolute',
+            left: 60,
+            right: 60,
+            bottom: 30,
+            height: 55,
+            borderRadius: 30,
+            backgroundColor: tabBarBg,
+            elevation: 18,
+            zIndex: 9998,
+          }}
+        />
         <Tabs
-          screenOptions={{
+          screenOptions={() => ({
             tabBarShowLabel: false,
             tabBarStyle: {
-              backgroundColor: "#1b263b",
+              backgroundColor: 'transparent',
               paddingVertical: 10,
               paddingHorizontal: 10,
               paddingBottom: 9,
