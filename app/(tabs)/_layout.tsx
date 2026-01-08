@@ -59,7 +59,7 @@ export default function TabsLayout() {
             },
             tabBarActiveTintColor: "#e0e1dd",
             tabBarInactiveTintColor: "#415a77",
-          }}
+          })}
         >
           <Tabs.Screen
             name="index"
