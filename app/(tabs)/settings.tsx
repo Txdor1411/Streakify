@@ -1,69 +1,57 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import React, { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Switch, Text, View } from "react-native";
-import { useTheme } from "../ThemeProvider";
-const KEY_LARGE_TEXT = "@pref_large_text";
-const KEY_REDUCE_MOTION = "@pref_reduce_motion";
+import { useRouter } from "expo-router";
+import { Alert, Pressable, StyleSheet, Text, View } from "react-native";
+import { logout } from "../../services/authService";
 
-export default function Settings() {
-  const { dark: darkMode, toggle: toggleDark } = useTheme();
-  const bg = darkMode ? "#05060a" : "#f7f7f8";
-  const textColor = darkMode ? "#e0e1dd" : "#0d1b2a";
-  const [largeText, setLargeText] = useState(false);
-  const [reduceMotion, setReduceMotion] = useState(false);
+export default function SettingsScreen() {
+  const router = useRouter();
 
-  useEffect(() => {
-    (async () => {
-      try {
-        const l = await AsyncStorage.getItem(KEY_LARGE_TEXT);
-        const r = await AsyncStorage.getItem(KEY_REDUCE_MOTION);
-        if (l !== null) setLargeText(l === "true");
-        if (r !== null) setReduceMotion(r === "true");
-      } catch (e) {
-        console.warn("Failed to load settings", e);
-      }
-    })();
-  }, []);
-  const toggleLargeText = async (v: boolean) => {
-    setLargeText(v);
-    try { await AsyncStorage.setItem(KEY_LARGE_TEXT, v ? "true" : "false"); } catch {}
-  };
-  const toggleReduceMotion = async (v: boolean) => {
-    setReduceMotion(v);
-    try { await AsyncStorage.setItem(KEY_REDUCE_MOTION, v ? "true" : "false"); } catch {}
+  const onLogout = async () => {
+    Alert.alert(
+      "Log out",
+      "Are you sure you want to log out?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Log out",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              await logout();
+              router.replace("/(auth)/login");
+            } catch (e) {
+              Alert.alert("Error", "Could not log out.");
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
-    <ScrollView contentContainerStyle={[styles.container, { backgroundColor: bg }]}>
-      <Text style={[styles.title, { color: textColor }]}>Settings</Text>
-
-      <Text style={[styles.section, { color: textColor }]}>Appearance</Text>
-        <View style={styles.row}>
-        <Text style={[styles.label, { color: textColor }]}>Dark Mode</Text>
-        <Switch value={darkMode} onValueChange={toggleDark} />
-      </View>
-
-      <Text style={[styles.section, { color: textColor }]}>Accessibility</Text>
-      <View style={styles.row}>
-        <Text style={[styles.label, { color: textColor }]}>Large Text</Text>
-        <Switch value={largeText} onValueChange={toggleLargeText} />
-      </View>
-      <View style={styles.row}>
-        <Text style={[styles.label, { color: textColor }]}>Reduce Motion</Text>
-        <Switch value={reduceMotion} onValueChange={toggleReduceMotion} />
-      </View>
-    </ScrollView>
+    <View style={styles.container}>
+      <Pressable style={styles.logoutButton} onPress={onLogout}>
+        <Text style={styles.logoutText}>Log out</Text>
+      </Pressable>
+    </View>
   );
-}  
+}
+
 const styles = StyleSheet.create({
   container: {
-    padding: 20,
-    backgroundColor: "#f7f7f8",
-    minHeight: "100%",
+    flex: 1,
+    backgroundColor: "#e0e1dd",
+    justifyContent: "center",
+    alignItems: "center",
   },
-  title: { fontSize: 24, fontWeight: "700", marginBottom: 12, color: "#0d1b2a" },
-  section: { fontSize: 16, fontWeight: "700", marginTop: 18, color: "#0d1b2a" },
-  row: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginTop: 12 },
-  label: { fontSize: 16, fontWeight: "600", color: "#0d1b2a" },
-  body: { marginTop: 8, color: "#0d1b2a", lineHeight: 20 },
+  logoutButton: {
+    backgroundColor: "#b00020",
+    paddingVertical: 14,
+    paddingHorizontal: 30,
+    borderRadius: 16,
+  },
+  logoutText: {
+    color: "#fff",
+    fontWeight: "800",
+    fontSize: 16,
+  },
 });
