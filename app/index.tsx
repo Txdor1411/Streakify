@@ -1,19 +1,5 @@
-import { useRouter } from 'expo-router';
-import { getAuth } from 'firebase/auth';
-import React from 'react';
-import { Text, TouchableOpacity, View } from 'react-native';
-import { auth } from '../lib/firebaseConfig';
+import { Redirect } from "expo-router";
 
-export default function HomePage() {
-  const router = useRouter();
-  getAuth().onAuthStateChanged((user) => {
-    if(!user) router.replace('/(auth)/login');
-  });
-  return (
-    <View>
-      <TouchableOpacity onPress={()=>auth.signOut()}>
-      <Text>Sign Out</Text>
-      </TouchableOpacity>
-    </View>
-  )
+export default function IndexRedirect() {
+  return <Redirect href="/(tabs)" />;
 }
