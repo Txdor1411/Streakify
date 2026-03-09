@@ -63,6 +63,20 @@ export async function signInWithGoogleIdToken(idToken: string): Promise<User> {
   return result.user;
 }
 
+export async function signInWithGoogleTokens(
+  idToken: string | null,
+  accessToken: string | null
+): Promise<User> {
+  const credential = GoogleAuthProvider.credential(idToken, accessToken);
+
+  if (!credential) {
+    throw new Error("Google did not return usable tokens.");
+  }
+
+  const result = await signInWithCredential(auth, credential);
+  return result.user;
+}
+
 export async function signOutCurrentUser(): Promise<void> {
   await signOut(auth);
 }

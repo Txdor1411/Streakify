@@ -11,7 +11,7 @@ import {
 
 import {
     signInWithEmail,
-    signInWithGoogleIdToken,
+    signInWithGoogleTokens,
     signOutCurrentUser,
     signUpWithEmail,
 } from "@/lib/auth";
@@ -23,7 +23,10 @@ type AuthContextValue = {
   isInitializing: boolean;
   signInUser: (email: string, password: string) => Promise<void>;
   signUpUser: (email: string, password: string) => Promise<void>;
-  signInWithGoogleToken: (idToken: string) => Promise<void>;
+  signInWithGoogleToken: (
+    idToken: string | null,
+    accessToken: string | null
+  ) => Promise<void>;
   signOutUser: () => Promise<void>;
 };
 
@@ -50,9 +53,12 @@ export function AuthProvider({ children }: PropsWithChildren) {
     await signUpWithEmail(email, password);
   }, []);
 
-  const signInWithGoogleToken = useCallback(async (idToken: string) => {
-    await signInWithGoogleIdToken(idToken);
-  }, []);
+  const signInWithGoogleToken = useCallback(
+    async (idToken: string | null, accessToken: string | null) => {
+      await signInWithGoogleTokens(idToken, accessToken);
+    },
+    []
+  );
 
   const signOutUser = useCallback(async () => {
     await signOutCurrentUser();

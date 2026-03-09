@@ -55,10 +55,15 @@ export default function LoginScreen() {
         return;
       }
 
-      const idToken = response.authentication?.idToken;
+      const idToken =
+        response.authentication?.idToken ??
+        ((response as { params?: { id_token?: string } }).params?.id_token ?? null);
+      const accessToken =
+        response.authentication?.accessToken ??
+        ((response as { params?: { access_token?: string } }).params?.access_token ?? null);
 
-      if (!idToken) {
-        setErrorText("Google did not return an ID token.");
+      if (!idToken && !accessToken) {
+        setErrorText("Google did not return a usable token.");
         return;
       }
 
@@ -66,7 +71,7 @@ export default function LoginScreen() {
       setIsGoogleSubmitting(true);
 
       try {
-        await signInWithGoogleToken(idToken);
+        await signInWithGoogleToken(idToken, accessToken);
       } catch (error) {
         setErrorText(mapAuthError(error));
       } finally {
