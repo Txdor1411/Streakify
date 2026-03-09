@@ -37,6 +37,10 @@ function AuthGate() {
   return <Slot />;
 }
 
+export const unstable_settings = {
+  anchor: '/(tabs)',
+};
+
 export default function RootLayout() {
   return (
     <AuthProvider>
