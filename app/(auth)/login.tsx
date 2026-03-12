@@ -4,12 +4,12 @@ import { Link } from "expo-router";
 import * as WebBrowser from "expo-web-browser";
 import { useEffect, useMemo, useState } from "react";
 import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
+    ActivityIndicator,
+    Pressable,
+    StyleSheet,
+    Text,
+    TextInput,
+    View,
 } from "react-native";
 
 import { mapAuthError } from "@/lib/auth";
@@ -41,6 +41,22 @@ export default function LoginScreen() {
   const [errorText, setErrorText] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
+
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+
+    if (errorText) {
+      setErrorText(null);
+    }
+  };
+
+  const handlePasswordChange = (value: string) => {
+    setPassword(value);
+
+    if (errorText) {
+      setErrorText(null);
+    }
+  };
 
   const googleConfig = useMemo(getGoogleConfig, []);
   const [request, response, promptAsync] = Google.useAuthRequest(googleConfig);
@@ -83,7 +99,9 @@ export default function LoginScreen() {
   }, [response, signInWithGoogleToken]);
 
   const handleLogin = async () => {
-    if (!email.trim() || !password) {
+    const trimmedEmail = email.trim();
+
+    if (!trimmedEmail || !password) {
       setErrorText("Email and password are required.");
       return;
     }
@@ -92,7 +110,7 @@ export default function LoginScreen() {
     setIsSubmitting(true);
 
     try {
-      await signInUser(email, password);
+      await signInUser(trimmedEmail, password);
     } catch (error) {
       setErrorText(mapAuthError(error));
     } finally {
@@ -119,7 +137,7 @@ export default function LoginScreen() {
         autoCapitalize="none"
         autoCorrect={false}
         keyboardType="email-address"
-        onChangeText={setEmail}
+        onChangeText={handleEmailChange}
         placeholder="Email"
         placeholderTextColor="#9e8b7f"
         style={styles.input}
@@ -127,7 +145,7 @@ export default function LoginScreen() {
       />
       <TextInput
         autoCapitalize="none"
-        onChangeText={setPassword}
+        onChangeText={handlePasswordChange}
         placeholder="Password"
         placeholderTextColor="#9e8b7f"
         secureTextEntry

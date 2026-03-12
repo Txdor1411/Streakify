@@ -1,7 +1,6 @@
 import AntDesign from '@expo/vector-icons/AntDesign';
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
+import Feather from '@expo/vector-icons/Feather';
 import { Tabs } from "expo-router";
-
 
 
 
@@ -15,7 +14,7 @@ export default function TabsLayout() {
           headerShown: false,
           title: "Home", 
           tabBarIcon:({color}) =>(
-            <MaterialIcons name="home" size={24} color={color} />
+            <Feather name="home" size={24} color="black" />
         ), 
       }} 
       />
@@ -26,6 +25,41 @@ export default function TabsLayout() {
           title: "Add Habit", 
           tabBarIcon:({color}) =>(
             <AntDesign name="plus" size={24} color="black" />
+        ), 
+      }} 
+      />
+
+       <Tabs.Screen 
+        name="social" 
+        options={{ 
+          headerShown: false,
+          title: "Social", 
+          tabBarIcon:({color}) =>(
+            <Feather name="users" size={24} color="black" />
+        ), 
+      }} 
+      />
+
+             <Tabs.Screen 
+        name="statistics" 
+        options={{ 
+          headerShown: false,
+          title: "Statistics", 
+          tabBarIcon:({color}) =>(
+            <Feather name="bar-chart-2" size={24} color="black" />
+
+            
+        ), 
+      }} 
+      />
+
+             <Tabs.Screen 
+        name="settings" 
+        options={{ 
+          headerShown: false,
+          title: "Settings", 
+          tabBarIcon:({color}) =>(
+            <AntDesign name="setting" size={24} color="black" />
         ), 
       }} 
       />

@@ -46,22 +46,26 @@ export function AuthProvider({ children }: PropsWithChildren) {
   }, []);
 
   const signInUser = useCallback(async (email: string, password: string) => {
-    await signInWithEmail(email, password);
+    const credential = await signInWithEmail(email, password);
+    setUser(credential.user);
   }, []);
 
   const signUpUser = useCallback(async (email: string, password: string) => {
-    await signUpWithEmail(email, password);
+    const credential = await signUpWithEmail(email, password);
+    setUser(credential.user);
   }, []);
 
   const signInWithGoogleToken = useCallback(
     async (idToken: string | null, accessToken: string | null) => {
-      await signInWithGoogleTokens(idToken, accessToken);
+      const nextUser = await signInWithGoogleTokens(idToken, accessToken);
+      setUser(nextUser);
     },
     []
   );
 
   const signOutUser = useCallback(async () => {
     await signOutCurrentUser();
+    setUser(null);
   }, []);
 
   const value = useMemo(
