@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth-context";
 
 type HabitsContextValue = {
   habits: Habit[];
+  completionLog: Record<string, string[]>;
   isLoadingHabits: boolean;
   addHabit: (title: string, target: string) => Promise<void>;
   toggleHabit: (habitId: string) => Promise<void>;
@@ -23,6 +24,10 @@ function buildHabitStorageKey(userId: string | null | undefined): string {
 
 function buildHabitResetDateKey(userId: string | null | undefined): string {
   return `@streakify/habits-reset-date/${userId ?? "guest"}`;
+}
+
+function buildHabitCompletionLogKey(userId: string | null | undefined): string {
+  return `@streakify/habits-completion-log/${userId ?? "guest"}`;
 }
 
 function createHabitId(): string {
@@ -41,18 +46,59 @@ function resetDoneHabits(habits: Habit[]): Habit[] {
   return habits.map((habit) => (habit.done ? { ...habit, done: false } : habit));
 }
 
+function updateCompletionLogForHabit(
+  completionLog: Record<string, string[]>,
+  dateKey: string,
+  habitId: string,
+  done: boolean
+): Record<string, string[]> {
+  const current = completionLog[dateKey] ?? [];
+  const asSet = new Set(current);
+
+  if (done) {
+    asSet.add(habitId);
+  } else {
+    asSet.delete(habitId);
+  }
+
+  return {
+    ...completionLog,
+    [dateKey]: Array.from(asSet),
+  };
+}
+
+function removeHabitFromCompletionLog(
+  completionLog: Record<string, string[]>,
+  habitId: string
+): Record<string, string[]> {
+  const nextLog: Record<string, string[]> = {};
+
+  Object.entries(completionLog).forEach(([dateKey, completedHabits]) => {
+    nextLog[dateKey] = completedHabits.filter((id) => id !== habitId);
+  });
+
+  return nextLog;
+}
+
 export function HabitsProvider({ children }: PropsWithChildren) {
   const { user } = useAuth();
   const [habits, setHabits] = useState<Habit[]>(INITIAL_HABITS);
+  const [completionLog, setCompletionLog] = useState<Record<string, string[]>>({});
   const [isLoadingHabits, setIsLoadingHabits] = useState(true);
   const habitsRef = useRef<Habit[]>(INITIAL_HABITS);
+  const completionLogRef = useRef<Record<string, string[]>>({});
 
   const storageKey = useMemo(() => buildHabitStorageKey(user?.uid), [user?.uid]);
   const resetDateKey = useMemo(() => buildHabitResetDateKey(user?.uid), [user?.uid]);
+  const completionLogKey = useMemo(() => buildHabitCompletionLogKey(user?.uid), [user?.uid]);
 
   useEffect(() => {
     habitsRef.current = habits;
   }, [habits]);
+
+  useEffect(() => {
+    completionLogRef.current = completionLog;
+  }, [completionLog]);
 
   useEffect(() => {
     let isMounted = true;
@@ -61,15 +107,24 @@ export function HabitsProvider({ children }: PropsWithChildren) {
       setIsLoadingHabits(true);
       try {
         const today = getTodayDateKey();
-        const [[, savedHabits], [, savedResetDate]] = await AsyncStorage.multiGet([storageKey, resetDateKey]);
+        const [[, savedHabits], [, savedResetDate], [, savedCompletionLog]] = await AsyncStorage.multiGet([
+          storageKey,
+          resetDateKey,
+          completionLogKey,
+        ]);
         if (!isMounted) {
           return;
         }
 
         let nextHabits: Habit[] = INITIAL_HABITS;
+        let nextCompletionLog: Record<string, string[]> = {};
 
         if (savedHabits) {
           nextHabits = JSON.parse(savedHabits) as Habit[];
+        }
+
+        if (savedCompletionLog) {
+          nextCompletionLog = JSON.parse(savedCompletionLog) as Record<string, string[]>;
         }
 
         if (savedResetDate !== today) {
@@ -77,6 +132,7 @@ export function HabitsProvider({ children }: PropsWithChildren) {
           await AsyncStorage.multiSet([
             [storageKey, JSON.stringify(nextHabits)],
             [resetDateKey, today],
+            [completionLogKey, JSON.stringify(nextCompletionLog)],
           ]);
         }
 
@@ -85,9 +141,11 @@ export function HabitsProvider({ children }: PropsWithChildren) {
         }
 
         setHabits(nextHabits);
+        setCompletionLog(nextCompletionLog);
       } catch {
         if (isMounted) {
           setHabits(resetDoneHabits(INITIAL_HABITS));
+          setCompletionLog({});
         }
       } finally {
         if (isMounted) {
@@ -101,7 +159,27 @@ export function HabitsProvider({ children }: PropsWithChildren) {
     return () => {
       isMounted = false;
     };
-  }, [resetDateKey, storageKey]);
+  }, [completionLogKey, resetDateKey, storageKey]);
+
+  const persistHabitsAndCompletionLog = useCallback(
+    async (nextHabits: Habit[], nextCompletionLog: Record<string, string[]>, resetDate: string) => {
+      setHabits(nextHabits);
+      setCompletionLog(nextCompletionLog);
+      habitsRef.current = nextHabits;
+      completionLogRef.current = nextCompletionLog;
+
+      try {
+        await AsyncStorage.multiSet([
+          [storageKey, JSON.stringify(nextHabits)],
+          [resetDateKey, resetDate],
+          [completionLogKey, JSON.stringify(nextCompletionLog)],
+        ]);
+      } catch {
+        // Keep in-memory updates even if persistence fails.
+      }
+    },
+    [completionLogKey, resetDateKey, storageKey]
+  );
 
   const maybeResetHabitsForNewDay = useCallback(async () => {
     const today = getTodayDateKey();
@@ -112,17 +190,11 @@ export function HabitsProvider({ children }: PropsWithChildren) {
       }
 
       const nextHabits = resetDoneHabits(habitsRef.current);
-      setHabits(nextHabits);
-      habitsRef.current = nextHabits;
-
-      await AsyncStorage.multiSet([
-        [storageKey, JSON.stringify(nextHabits)],
-        [resetDateKey, today],
-      ]);
+      await persistHabitsAndCompletionLog(nextHabits, completionLogRef.current, today);
     } catch {
       // Leave habits unchanged when daily reset check fails.
     }
-  }, [resetDateKey, storageKey]);
+  }, [persistHabitsAndCompletionLog, resetDateKey]);
 
   useEffect(() => {
     let previousAppState = AppState.currentState;
@@ -140,22 +212,6 @@ export function HabitsProvider({ children }: PropsWithChildren) {
     };
   }, [maybeResetHabitsForNewDay]);
 
-  const persistHabits = useCallback(
-    async (nextHabits: Habit[]) => {
-      setHabits(nextHabits);
-      habitsRef.current = nextHabits;
-      try {
-        await AsyncStorage.multiSet([
-          [storageKey, JSON.stringify(nextHabits)],
-          [resetDateKey, getTodayDateKey()],
-        ]);
-      } catch {
-        // Keep in-memory updates even if persistence fails.
-      }
-    },
-    [resetDateKey, storageKey]
-  );
-
   const addHabit = useCallback(
     async (title: string, target: string) => {
       const trimmedTitle = title.trim();
@@ -172,19 +228,33 @@ export function HabitsProvider({ children }: PropsWithChildren) {
         done: false,
       };
 
-      await persistHabits([newHabit, ...habits]);
+      await persistHabitsAndCompletionLog([newHabit, ...habits], completionLog, getTodayDateKey());
     },
-    [habits, persistHabits]
+    [completionLog, habits, persistHabitsAndCompletionLog]
   );
 
   const toggleHabit = useCallback(
     async (habitId: string) => {
-      const nextHabits = habits.map((habit) =>
-        habit.id === habitId ? { ...habit, done: !habit.done } : habit
-      );
-      await persistHabits(nextHabits);
+      let hasMatch = false;
+      let nextDone = false;
+      const nextHabits = habits.map((habit) => {
+        if (habit.id !== habitId) {
+          return habit;
+        }
+
+        hasMatch = true;
+        nextDone = !habit.done;
+        return { ...habit, done: nextDone };
+      });
+
+      if (!hasMatch) {
+        return;
+      }
+
+      const nextCompletionLog = updateCompletionLogForHabit(completionLog, getTodayDateKey(), habitId, nextDone);
+      await persistHabitsAndCompletionLog(nextHabits, nextCompletionLog, getTodayDateKey());
     },
-    [habits, persistHabits]
+    [completionLog, habits, persistHabitsAndCompletionLog]
   );
 
   const markHabitDone = useCallback(
@@ -192,29 +262,32 @@ export function HabitsProvider({ children }: PropsWithChildren) {
       const nextHabits = habits.map((habit) =>
         habit.id === habitId ? { ...habit, done: true } : habit
       );
-      await persistHabits(nextHabits);
+      const nextCompletionLog = updateCompletionLogForHabit(completionLog, getTodayDateKey(), habitId, true);
+      await persistHabitsAndCompletionLog(nextHabits, nextCompletionLog, getTodayDateKey());
     },
-    [habits, persistHabits]
+    [completionLog, habits, persistHabitsAndCompletionLog]
   );
 
   const deleteHabit = useCallback(
     async (habitId: string) => {
       const nextHabits = habits.filter((habit) => habit.id !== habitId);
-      await persistHabits(nextHabits);
+      const nextCompletionLog = removeHabitFromCompletionLog(completionLog, habitId);
+      await persistHabitsAndCompletionLog(nextHabits, nextCompletionLog, getTodayDateKey());
     },
-    [habits, persistHabits]
+    [completionLog, habits, persistHabitsAndCompletionLog]
   );
 
   const value = useMemo(
     () => ({
       habits,
+      completionLog,
       isLoadingHabits,
       addHabit,
       toggleHabit,
       markHabitDone,
       deleteHabit,
     }),
-    [addHabit, deleteHabit, habits, isLoadingHabits, markHabitDone, toggleHabit]
+    [addHabit, completionLog, deleteHabit, habits, isLoadingHabits, markHabitDone, toggleHabit]
   );
 
   return <HabitsContext.Provider value={value}>{children}</HabitsContext.Provider>;
