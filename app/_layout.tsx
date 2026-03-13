@@ -3,8 +3,12 @@ import "../globals.css";
 import { Slot, useRouter, useSegments } from "expo-router";
 import { useEffect } from "react";
 import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { GestureHandlerRootView } from "react-native-gesture-handler";
+import { TamaguiProvider } from "tamagui";
 
 import { AuthProvider, useAuth } from "@/lib/auth-context";
+import { HabitsProvider } from "@/lib/habits-context";
+import tamaguiConfig from "@/tamagui.config";
 
 function AuthGate() {
   const { isAuthenticated, isInitializing } = useAuth();
@@ -41,9 +45,15 @@ function AuthGate() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AuthGate />
-    </AuthProvider>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <TamaguiProvider config={tamaguiConfig} defaultTheme="light">
+        <AuthProvider>
+          <HabitsProvider>
+            <AuthGate />
+          </HabitsProvider>
+        </AuthProvider>
+      </TamaguiProvider>
+    </GestureHandlerRootView>
   );
 }
 
